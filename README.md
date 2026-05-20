@@ -55,7 +55,7 @@ matplotlib
 | Componente | Especificação |
 |---|---|
 | Plataforma | Google Colab (Free Tier) |
-| GPU | NVIDIA Tesla T4 |
+| GPU | NVIDIA Tesla T4 (Turing, cc 7.5) |
 | VRAM total | 15.102 MB |
 | Driver CUDA | 12.1 |
 | PyTorch | 2.2.1+cu121 |
