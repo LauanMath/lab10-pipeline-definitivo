@@ -50,7 +50,7 @@ matplotlib
 
 ---
 
-## Ambiente de Execução
+## Ambiente de Execução (GPU de Teste)
 
 | Componente | Especificação |
 |---|---|
