@@ -5,4 +5,4 @@ accelerate>=0.27.0
 flash-attn>=2.5.0
 matplotlib>=3.8.0
 numpy>=1.26.0
-# Nota: flash-attn requer GPU Ampere+ (compute capability >= 8.0)
+# Nota: flash-attn requer GPU Ampere+ (cc >= 8.0); T4 usa SDPA como fallback
