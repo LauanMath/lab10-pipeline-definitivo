@@ -113,7 +113,7 @@ Mesmo com todas as otimizações implementadas, escalar para 2 milhões de token
 
 ---
 
-## Referências
+## Referências Bibliográficas
 
 - Dettmers et al. (2023). *QLoRA: Efficient Finetuning of Quantized LLMs*. NeurIPS 2023.
 - Dao et al. (2022). *FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness*. NeurIPS 2022.
