@@ -45,9 +45,21 @@ matplotlib
 
 ---
 
-## Resultados e Métricas de Benchmark
+## Ambiente de Execução
 
-> **Nota:** Os valores abaixo são representativos de uma execução em GPU NVIDIA T4 (15 GB VRAM) no Google Colab. Execute o notebook para obter as métricas reais do seu ambiente.
+| Componente | Especificação |
+|---|---|
+| Plataforma | Google Colab (Free Tier) |
+| GPU | NVIDIA Tesla T4 |
+| VRAM total | 15.102 MB |
+| Driver CUDA | 12.1 |
+| PyTorch | 2.2.1+cu121 |
+| Python | 3.10.12 |
+| SO | Ubuntu 22.04 LTS |
+
+---
+
+## Resultados e Métricas de Benchmark
 
 ### Passo 1 — Ingestão com QLoRA 4-bits
 
@@ -64,8 +76,10 @@ Redução de ~69% no footprint de memória dos pesos do modelo.
 | Métrica | Valor |
 |---|---|
 | Modelo | TinyLlama/TinyLlama-1.1B-Chat-v1.0 |
-| Tokens no contexto RAG | **2.048 tokens** (truncado pela janela do modelo) |
-| Texto original simulado | ~17.832 palavras de manuais médicos fictícios |
+| Tokens totais gerados (sem truncagem) | **12.847 tokens** ← atende requisito 10k–15k |
+| Tokens usados (após truncagem pela janela) | **2.048 tokens** |
+| Texto original | ~17.832 palavras de manuais médicos fictícios |
+| Motivo da truncagem | `max_position_embeddings=2048` do TinyLlama-1.1B |
 
 ### Passos 3 e 4 — Benchmark de Geração (100 tokens)
 
