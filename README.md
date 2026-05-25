@@ -86,7 +86,7 @@ Redução de ~69% no footprint de memória dos pesos do modelo.
 | Texto original | ~17.832 palavras de manuais médicos fictícios |
 | Motivo da truncagem | `max_position_embeddings=2048` do TinyLlama-1.1B |
 
-### Passos 3 e 4 — Benchmark de Geração (100 tokens, greedy decoding)
+### Passos 3 e 4 — Benchmark de Geração (100 tokens)
 
 > Ambiente: Google Colab · GPU NVIDIA Tesla T4 · VRAM 15.102 MB · PyTorch 2.2.1+cu121  
 > **Backend de atenção:** SDPA (`torch.nn.functional.scaled_dot_product_attention`) — FlashAttention-2 exige Ampere (cc ≥ 8.0); T4 é Turing (cc 7.5), não suportado.
