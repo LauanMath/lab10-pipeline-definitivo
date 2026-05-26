@@ -11,7 +11,7 @@ Pipeline de IA ponta a ponta simulando o ambiente de produção da **HealthTech*
 
 - **Unidade I (Self-Attention):** manipulação da arquitetura via FlashAttention-2 e KV Cache
 - **Unidade II (QLoRA):** carregamento do LLM com quantização em 4-bits (NF4)
-- **Unidade III (RAG):** simulação de contexto massivo de manuais médicos (~12.000 tokens)
+- **Unidade III (RAG):** simulação de contexto massivo de manuais médicos (~17.800 palavras, truncado para 2.048 tokens pela janela do modelo)
 
 ---
 
