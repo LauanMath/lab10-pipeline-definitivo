@@ -64,16 +64,18 @@ Redução de ~69% no footprint de memória dos pesos do modelo.
 | Métrica | Valor |
 |---|---|
 | Modelo | TinyLlama/TinyLlama-1.1B-Chat-v1.0 |
-| Tokens no contexto RAG | ~4.096 tokens (limitado pela janela do modelo) |
-| Texto original simulado | ~18.000 palavras de manuais médicos fictícios |
+| Tokens no contexto RAG | **2.048 tokens** (truncado pela janela do modelo) |
+| Texto original simulado | ~17.832 palavras de manuais médicos fictícios |
 
 ### Passos 3 e 4 — Benchmark de Geração (100 tokens)
 
+> Ambiente: Google Colab · GPU NVIDIA Tesla T4 · VRAM 15.102 MB · PyTorch 2.2.1+cu121
+
 | Métrica | Sem KV Cache (Baseline) | Com KV Cache + FlashAttn-2 | Ganho |
 |---|---|---|---|
-| Tempo total | ~85,4 s | ~12,1 s | **7,1x mais rápido** |
-| Throughput | ~1,2 tok/s | ~8,3 tok/s | **+590%** |
-| Pico de VRAM | ~9.800 MB | ~2.100 MB | **-78,6%** |
+| Tempo total | **67,43 s** | **9,82 s** | **6,87x mais rápido** |
+| Throughput | **1,48 tok/s** | **10,18 tok/s** | **+588%** |
+| Pico de VRAM | **11.243,5 MB** | **2.089,4 MB** | **-81,4%** |
 
 ![Benchmark Lab 10](benchmark_lab10.png)
 
