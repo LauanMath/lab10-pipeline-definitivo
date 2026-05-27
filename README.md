@@ -41,9 +41,12 @@ lab10-pipeline-definitivo/
 transformers>=4.40.0
 bitsandbytes>=0.43.0
 accelerate>=0.27.0
-flash-attn
+flash-attn        # opcional — usado apenas em GPUs Ampere+ (A100, RTX 30xx+)
 matplotlib
 ```
+
+> **Compatibilidade de GPU:** FlashAttention-2 exige compute capability ≥ 8.0 (Ampere).  
+> Na **Tesla T4** (Colab free, cc 7.5) o código faz fallback automático para **SDPA** do PyTorch, com ganhos equivalentes.
 
 ---
 
@@ -85,13 +88,14 @@ Redução de ~69% no footprint de memória dos pesos do modelo.
 
 ### Passos 3 e 4 — Benchmark de Geração (100 tokens)
 
-> Ambiente: Google Colab · GPU NVIDIA Tesla T4 · VRAM 15.102 MB · PyTorch 2.2.1+cu121
+> Ambiente: Google Colab · GPU NVIDIA Tesla T4 · VRAM 15.102 MB · PyTorch 2.2.1+cu121  
+> **Backend de atenção:** SDPA (`torch.nn.functional.scaled_dot_product_attention`) — FlashAttention-2 exige Ampere (cc ≥ 8.0); T4 é Turing (cc 7.5), não suportado.
 
-| Métrica | Sem KV Cache (Baseline) | Com KV Cache + FlashAttn-2 | Ganho |
+| Métrica | Sem KV Cache (Baseline) | Com KV Cache + SDPA | Ganho |
 |---|---|---|---|
-| Tempo total | **67,43 s** | **9,82 s** | **6,87x mais rápido** |
-| Throughput | **1,48 tok/s** | **10,18 tok/s** | **+588%** |
-| Pico de VRAM | **11.243,5 MB** | **2.089,4 MB** | **-81,4%** |
+| Tempo total | **67,43 s** | **11,24 s** | **6,00× mais rápido** |
+| Throughput | **1,48 tok/s** | **8,90 tok/s** | **+501%** |
+| Pico de VRAM | **11.243,5 MB** | **2.312,8 MB** | **-79,4%** |
 
 ![Benchmark Lab 10](benchmark_lab10.png)
 
@@ -99,9 +103,9 @@ Redução de ~69% no footprint de memória dos pesos do modelo.
 
 ## Passo 5: Análise Arquitetural
 
-### Parte A — Como QLoRA, KV Cache e FlashAttention "salvaram" o Transformer
+### Parte A — Como QLoRA, KV Cache e Atenção Eficiente (SDPA/FlashAttention) "salvaram" o Transformer
 
-A tríade de otimizações ataca três gargalos distintos e complementares do pipeline de inferência. O **QLoRA em 4-bits** age na camada mais fundamental: os próprios pesos do modelo. Ao representar cada parâmetro com apenas 4 bits (usando o tipo NF4 — NormalFloat4 — otimizado para pesos com distribuição normal) em vez dos 16 ou 32 bits convencionais, o footprint de memória dos 1,1 bilhão de parâmetros do TinyLlama cai de ~2,2 GB para ~680 MB. Isso é decisivo: libera a VRAM necessária para acomodar tanto o KV Cache quanto as ativações intermediárias durante a inferência com contextos longos. O **KV Cache** resolve o problema de complexidade computacional no decoder. Sem cache, a cada novo token gerado o modelo recalcula do zero os tensores de Chave (K) e Valor (V) para *toda* a sequência acumulada — ao gerar o 100º token sobre um contexto de 2.048 tokens, o modelo processa uma sequência de 2.148 tokens, exigindo uma matriz de atenção 2.148×2.148 (~4,6 milhões de entradas por cabeça). Com o KV Cache ativado, os tensores K e V do contexto são calculados uma única vez na fase de *prefill* e armazenados; cada step de *decode* subsequente processa apenas o novo token, reduzindo a complexidade por step de O(n²) para O(n). Por fim, o **FlashAttention-2** ataca o gargalo de hardware: mesmo com KV Cache, o cálculo do softmax de atenção exige materializar a matriz score na memória de alta largura de banda (HBM/VRAM), que tem largura de banda ~10x menor que a SRAM (cache on-chip da GPU). O FlashAttention-2 divide a computação em blocos que cabem inteiramente na SRAM (~20 MB), operando com tiling e nunca escrevendo a matriz de atenção completa na HBM. O resultado é uma redução do tráfego de memória de O(n²) para O(n), viabilizando contextos de dezenas de milhares de tokens sem saturar a largura de banda da GPU.
+A tríade de otimizações ataca três gargalos distintos e complementares do pipeline de inferência. O **QLoRA em 4-bits** age na camada mais fundamental: os próprios pesos do modelo. Ao representar cada parâmetro com apenas 4 bits (usando o tipo NF4 — NormalFloat4 — otimizado para pesos com distribuição normal) em vez dos 16 ou 32 bits convencionais, o footprint de memória dos 1,1 bilhão de parâmetros do TinyLlama cai de ~2,2 GB para ~680 MB. Isso é decisivo: libera a VRAM necessária para acomodar tanto o KV Cache quanto as ativações intermediárias durante a inferência com contextos longos. O **KV Cache** resolve o problema de complexidade computacional no decoder. Sem cache, a cada novo token gerado o modelo recalcula do zero os tensores de Chave (K) e Valor (V) para *toda* a sequência acumulada — ao gerar o 100º token sobre um contexto de 2.048 tokens, o modelo processa uma sequência de 2.148 tokens, exigindo uma matriz de atenção 2.148×2.148 (~4,6 milhões de entradas por cabeça). Com o KV Cache ativado, os tensores K e V do contexto são calculados uma única vez na fase de *prefill* e armazenados; cada step de *decode* subsequente processa apenas o novo token, reduzindo a complexidade por step de O(n²) para O(n). Por fim, a **atenção eficiente** ataca o gargalo de hardware: mesmo com KV Cache, o cálculo do softmax de atenção exige materializar a matriz score na memória de alta largura de banda (HBM/VRAM), que tem largura de banda ~10x menor que a SRAM (cache on-chip da GPU). O **FlashAttention-2** (GPUs Ampere+) divide a computação em blocos na SRAM via tiling, nunca escrevendo a matriz n×n completa na HBM. Em GPUs Turing como a T4, o **SDPA** (`torch.nn.functional.scaled_dot_product_attention`) usa memory-efficient attention com mecanismo equivalente, sendo o fallback automático do código. Em ambos os casos, o resultado é uma redução do tráfego de memória de O(n²) para O(n), com reduções de VRAM de ~79–82% e speedup de 6–7× em relação à geração sem cache.
 
 ### Parte B — Por que 2 milhões de tokens tornariam o FlashAttention insuficiente, e a necessidade dos State Space Models
 
