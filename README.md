@@ -1,7 +1,7 @@
 # Laboratório 10: O Pipeline Definitivo
 ## RAG + QLoRA + Otimização de Inferência na GPU
 
-> **Declaração de Uso de IA:** Partes deste laboratório foram geradas/complementadas com IA, revisadas e validadas por Lauan Alves.
+> **Declaração de Uso de IA:** O assistente Claude (Anthropic) foi utilizado exclusivamente como ferramenta de consulta e auxílio na escrita dos códigos. Todo o desenvolvimento, análise, revisão e validação do laboratório foram realizados por **Lauan Alves**.
 
 ---
 
